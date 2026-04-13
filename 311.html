@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Laboratório de Programação: Ciclo da Higiene</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        /* Garante que o body ocupe a tela toda sem transbordar */
+        body { 
+            background: #f0f2f5; 
+            margin: 0; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        header { background: #1a73e8; color: white; text-align: center; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-shrink: 0; }
+
+        main { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 10px; 
+            overflow: hidden; /* Evita que o main crie rolagem externa */
+        }
+        
+        /* Janela principal com rolagem interna se necessário */
+        .janela {
+            background: white; 
+            width: 100%; 
+            max-width: 900px; 
+            max-height: 85vh; /* Ocupa no máximo 85% da altura da tela */
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: none; 
+            grid-template-columns: 320px 1fr; 
+            overflow: hidden; 
+            border: 1px solid #ddd;
+        }
+        .janela.ativa { display: grid; }
+
+        /* Colunas com rolagem independente se o conteúdo for grande */
+        .coluna-comandos { 
+            background: #f8f9fa; 
+            border-right: 1px solid #eee; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
+        }
+
+        .coluna-visual { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 15px; 
+            overflow-y: auto; 
+        }
+
+        .instrucao-topo { font-size: 0.85rem; color: #5f6368; margin-bottom: 15px; background: #e8f0fe; padding: 10px; border-radius: 8px; border-left: 4px solid #1a73e8; }
+        
+        .btn-bloco {
+            background: #ffffff; border: 2px solid #1a73e8; color: #1a73e8;
+            padding: 10px; margin-bottom: 8px; border-radius: 8px; cursor: pointer;
+            font-weight: bold; text-align: center; transition: 0.2s; font-size: 0.9rem;
+        }
+        .btn-bloco:hover { background: #1a73e8; color: white; }
+
+        .canvas-emoji { font-size: 6rem; margin: 10px; }
+        .balao-texto { background: #fff9c4; padding: 12px; border-radius: 12px; border: 1px solid #fbc02d; margin-bottom: 10px; font-weight: bold; min-height: 60px; text-align: center; width: 90%; font-size: 0.95rem; }
+
+        .progresso-container { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+        .ponto { width: 12px; height: 12px; border-radius: 50%; background: #ddd; }
+        .ponto.feito { background: #34a853; transform: scale(1.1); }
+
+        /* Modal responsivo */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        .modal-card { background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .nota-circulo { width: 80px; height: 80px; border-radius: 50%; background: #1a73e8; color: white; font-size: 2rem; display: flex; justify-content: center; align-items: center; margin: 15px auto; border: 4px solid #e8f0fe; }
+
+        footer { 
+            background: white; 
+            padding: 8px; 
+            text-align: center; 
+            font-size: 0.8rem; 
+            color: #444; 
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .footer-highlight { font-weight: bold; color: #1a73e8; }
+
+        /* Ajuste para telas muito estreitas (Celular/Tablet pequeno) */
+        @media (max-width: 600px) {
+            .janela { grid-template-columns: 1fr; }
+            .coluna-comandos { border-right: none; border-bottom: 1px solid #eee; max-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2 style="margin: 0; font-size: 1.2rem;">Simulador de Algoritmos: Ciclos de Repetição</h2>
+</header>
+
+<main>
+    <div id="janela1" class="janela ativa">
+        <div class="coluna-comandos">
+            <div class="instrucao-topo"><strong>Fase 1:</strong> Trabalho Manual. Siga a ordem: Molhar, Ensaboar, Esfregar e Enxaguar.</div>
+            <button class="btn-bloco" onclick="processarManual('Molhar', '💧')">1. Molhar</button>
+            <button class="btn-bloco" onclick="processarManual('Ensaboar', '🧼')">2. Ensaboar</button>
+            <button class="btn-bloco" onclick="processarManual('Esfregar', '🧼🙌')">3. Esfregar</button>
+            <button class="btn-bloco" onclick="processarManual('Enxaguar', '✨')">4. Enxaguar</button>
+            
+            <div style="margin-top:auto; font-size: 0.75rem; color: #999; padding-top: 10px;">Erros de sequência: <span id="erros-total">0</span></div>
+        </div>
+        <div class="coluna-visual">
+            <div id="balao1" class="balao-texto">Olá! Você precisa completar 5 lavagens manuais. Vamos começar?</div>
+            <div id="emoji1" class="canvas-emoji">🖐️</div>
+            <div class="progresso-container" id="pontos-manual">
+                <div class="ponto"></div><div class="ponto"></div><div class="ponto"></div><div class="ponto"></div><div class="ponto"></div>
+            </div>
+            <p style="font-weight: bold; color: #1a73e8; margin-top: 8px; font-size: 0.9rem;">LAVAGENS COMPLETAS: <span id="count1">0</span>/5</p>
+        </div>
+    </div>
+
+    <div id="janela2" class="janela">
+        <div class="coluna-visual" style="grid-column: 1 / span 2;">
+            <div class="balao-texto" style="width: 80%; background: #e6fffa; border-color: #38b2ac;">Trabalho manual concluído! Agora, teste o LOOP: quanto o robô deve repetir?</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: center; background: #f8f9fa; padding: 20px; border-radius: 15px; border: 2px solid #38b2ac; width: 90%;">
+                <div style="text-align: center;">
+                    <p style="margin-bottom: 5px; font-weight: bold; font-size: 0.8rem;">REPETIR VEZES:</p>
+                    <input type="number" id="loopVal" style="width: 70px; font-size: 1.5rem; text-align: center; border-radius: 8px; border: 2px solid #1a73e8;" value="" min="1" max="10">
+                </div>
+                <button class="btn-bloco" style="height: 50px; padding: 0 25px; background: #34a853; border-color: #34a853; color: white; margin-bottom: 0;" onclick="rodarLoop()">RODAR LOOP 🚀</button>
+            </div>
+            <div id="emoji2" class="canvas-emoji">🤖</div>
+            <p id="status-loop" style="font-size: 0.9rem;">Aguardando seu comando...</p>
+        </div>
+    </div>
+</main>
+
+<div id="modal">
+    <div class="modal-card">
+        <h2 style="color: #1a73e8; margin-top: 0;">Relatório Final</h2>
+        <p style="font-size: 0.9rem;">Você completou o desafio de lógica!</p>
+        <div class="nota-circulo" id="nota-final">10</div>
+        <p id="feedback-final" style="font-size: 0.9rem; margin-bottom: 20px;"></p>
+        <button class="btn-bloco" style="width: 100%" onclick="location.reload()">Reiniciar Atividade</button>
+    </div>
+</div>
+
+<footer>
+    Atividade realizada pela <span class="footer-highlight">Profª Adriana Bett Terebinto</span><br>
+    Material Pedagógico de Informática © 2026
+</footer>
+
+<script>
+    let ordem = ['Molhar', 'Ensaboar', 'Esfregar', 'Enxaguar'];
+    let indexOrdem = 0;
+    let lavadas = 0;
+    let erros = 0;
+    const totalMeta = 5;
+
+    function processarManual(acao, emoji) {
+        const balao = document.getElementById('balao1');
+        
+        if (acao === ordem[indexOrdem]) {
+            document.getElementById('emoji1').innerText = emoji;
+            indexOrdem++;
+            let faltaLavar = totalMeta - lavadas;
+
+            if (indexOrdem > 3) {
+                lavadas++;
+                faltaLavar = totalMeta - lavadas;
+                indexOrdem = 0;
+                document.getElementById('count1').innerText = lavadas;
+                document.querySelectorAll('#pontos-manual .ponto')[lavadas - 1].classList.add('feito');
+                
+                if (lavadas >= totalMeta) {
+                    balao.innerText = "EXCELENTE! Você completou todas as lavagens!";
+                    setTimeout(() => {
+                        document.getElementById('janela1').classList.remove('ativa');
+                        document.getElementById('janela2').classList.add('ativa');
+                    }, 1000);
+                } else {
+                    balao.innerText = `Correto! Ciclo finalizado. Continue, ainda faltam ${faltaLavar} lavagens!`;
+                }
+            } else {
+                balao.innerText = `Correto! Continue por mais ${faltaLavar} lavagens.`;
+            }
+        } else {
+            erros++;
+            document.getElementById('erros-total').innerText = erros;
+            balao.innerText = `Ops! Ordem errada. Tente o passo: ${ordem[indexOrdem]}`;
+            document.getElementById('emoji1').innerText = "❌";
+        }
+    }
+
+    async function rodarLoop() {
+        const vezes = document.getElementById('loopVal').value;
+        const status = document.getElementById('status-loop');
+        const emoji2 = document.getElementById('emoji2');
+        document.getElementById('loopVal').disabled = true;
+
+        for (let i = 1; i <= vezes; i++) {
+            status.innerText = `Executando lavagem ${i} de ${vezes}...`;
+            const passos = ['💧', '🧼', '🧼🙌', '✨'];
+            for (let p of passos) {
+                emoji2.innerText = p;
+                await new Promise(r => setTimeout(r, 250));
+            }
+        }
+        mostrarModal();
+    }
+
+    function mostrarModal() {
+        document.getElementById('modal').style.display = 'flex';
+        let nota = 10 - erros;
+        if(nota < 0) nota = 0;
+        document.getElementById('nota-final').innerText = nota;
+        
+        const f = document.getElementById('feedback-final');
+        if(nota === 10) f.innerText = "Perfeito! Você não errou nenhuma sequência.";
+        else if(nota > 7) f.innerText = "Muito bem! Mas atenção para não clicar fora de ordem.";
+        else f.innerText = "Lógica concluída com alguns erros. Tente prestar mais atenção na ordem!";
+    }
+</script>
+</body>
+</html>
+```
